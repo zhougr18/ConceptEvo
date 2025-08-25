@@ -1,0 +1,9 @@
+easydict==1.13
+MULT==1.1.1
+numpy==2.3.2
+pandas==2.3.2
+protobuf==6.32.0
+scikit_learn==1.7.1
+torch==2.7.0
+tqdm==4.67.1
+transformers==4.52.3
