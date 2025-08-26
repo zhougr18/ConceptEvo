@@ -22,7 +22,7 @@ class Param():
             'train_batch_size': 16,
             'eval_batch_size': 8,
             'test_batch_size': 8,
-            'wait_patience': 3,
+            'wait_patience': 8,
 
             # add
             'padding_mode': 'zero',
@@ -42,7 +42,7 @@ class Param():
             weight_decay (float): The coefficient for L2 regularization. 
         """
         hyper_parameters = {
-            'num_train_epochs': [100],
+            'num_train_epochs': [40],
             'beta_shift': [0.005],
             'dropout_prob': [0.5],
             'warmup_proportion': 0.1,
@@ -50,7 +50,6 @@ class Param():
             'aligned_method': ['ctc'],
             'weight_decay': [0.03],
             'scale': [1],
-            'hidden_dim': [1024],
 
             # add
             'aug': False,

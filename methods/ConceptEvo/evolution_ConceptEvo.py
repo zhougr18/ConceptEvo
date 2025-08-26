@@ -4,25 +4,17 @@ import time
 
 def concepts_init(client):
     """
-    Function to initialize key concepts for concept evolution.
+    Function to initialize key concepts for concept evolution. The initial concept set is pre-generated and we keep both
+        the prompt and its corresponding model response as historical records.
     
     Returns:
         List of key concepts.
     """
 
-    video_file_name = "/home/sharing/disk1/Datasets/MIntRec/raw_data/S05/E13/529.mp4"
-    video_bytes = open(video_file_name, 'rb').read()
-
     history = []
     history.append({
         "role": "user",
         "parts": [
-                    {
-                        "inline_data": {
-                            "mime_type": "video/mp4",
-                            "data": video_bytes
-                        }
-                    },
                     {
                     "text": "You are an expert in multimodal interaction analysis. Multimodal intent understanding aims to capture \
                     the speaker's intent based on the video and the spoken text. The possible intent list is ['Complain', 'Praise', \
@@ -49,17 +41,6 @@ def concepts_init(client):
     key_concepts = [c.strip().lower() for c in response.rstrip('.').split(',') if c.strip()]
     return key_concepts, history
 
-    # response = client.models.generate_content(
-    #     model='models/gemini-2.0-flash',
-    #     contents=history
-    # )
-    # history.append({
-    #     "role": "model",
-    #     "parts": [{"text": response.text}]
-    # })
-    # key_concepts = [c.strip().lower() for c in response。text.rstrip('.').split(',') if c.strip()]
-    # return key_concepts, history
-
 
 def concepts_evolution(client, history, concept, D_score, S_score, epoch_num, loss, eval_score):
     """
@@ -76,9 +57,8 @@ def concepts_evolution(client, history, concept, D_score, S_score, epoch_num, lo
         None
     """
     concept_lines = [f"{name}: D_score = {d_score:.4f}, S_score = {s_score:.4f}" for name, d_score, s_score in zip(concept, D_score, S_score)]
-    # concept_lines = [f"{name}: S_score = {s_score:.4f}" for name, s_score in zip(concept, S_score)]
     concept_info = "\n".join(concept_lines)
-    print(concept_info)
+
 
     history.append({
         "role": "user",
@@ -111,40 +91,14 @@ def concepts_evolution(client, history, concept, D_score, S_score, epoch_num, lo
                     **Output Format:**
                     Return **only** the updated concept list as a comma-separated string. **Do not include explanations or rankings.**
                     """
-                # "text": f"""Now you are assisting in the training of a multimodal intent recognition model. At this stage, you are provided with the discriminability scores \
-                # for each concpte, the current epoch's training loss, validation performance, and the historical context of past concept selections and their impacts. \
-                # Your task is to refine the current concept list based on the following information: \
-                # - Concepts with **lower D_score values** are more discriminative and should be prioritized. \
-                # - The goal is to optimize for a set of analytical concepts that are both **effective and generalizable** across multiple intent categories. \
-                # - Please avoid concepts that are redundant or simply duplicate intent label names. \
-                # Training status: \
-                # - Epoch: {epoch_num:.4f}  \
-                # - Training Loss: {loss:.4f} \ 
-                # - Validation Score: {eval_score:.4f} \
-                # Here are the current concepts and their corresponding discriminability scores (D_score): {concept_info} \
-                # Please analyze the top 5 concepts with the highest learning scores to identify their common characteristics. Based on this, infer an improved concept that \
-                # could replace the bottom concept with the lowest scores. Keep the total number of concepts unchanged. Return only the updated concept list, formatted as a comma-separated string. Do not include any explanation."""
                 }
             ]
-        # "parts": [
-        #             {
-        #             "text": f"""Now you are assisting in the training of a multimodal intent recognition model. At this stage, you are provided with the current epoch's \
-        #             training loss, validation performance, and historical context of past concept selections and their impacts. Your task is to analyze these scores and \
-        #             signals to refine the current concept list. The goal is to optimize for a set of effective and generalizable analytical dimensions that support model \
-        #             learning and contribute to improved performance. The epoch number is {epoch_num:.4f}, the loss is {loss:.4f}, and the eval score is {eval_score:.4f}. Please return the updated list of concepts , ranked \
-        #             by importance. Avoid concepts that simply duplicate intent labels. Respond only with the list of key concepts, separated by commas."""
-        #             }
-        #         ]
     })
     response = safe_generate_content(
         client=client,
         model='models/gemini-2.0-flash',
         history=history
     )
-    # response = client.models.generate_content(
-    #     model='models/gemini-2.0-flash',
-    #     contents=history
-    # )
     if response is None:
         print("[INFO] Concept list unchanged due to API failure.")
         return concept, history
@@ -154,7 +108,7 @@ def concepts_evolution(client, history, concept, D_score, S_score, epoch_num, lo
         "parts": [{"text": response.text}]
     })
     key_concepts = [c.strip().lower() for c in response.text.rstrip('.').split(',') if c.strip()]
-    return key_concepts, history
+    return key_concepts, history, concept_info
 
 
 
@@ -167,7 +121,7 @@ def safe_generate_content(client, model, history, max_retries=5):
             )
             return response
         except Exception as e:
-            # 如果是临时性错误，尝试重试
+            # If it is a temporary error, try again
             if "503" in str(e) or "UNAVAILABLE" in str(e):
                 sleep_time = (2 ** attempt) + random.uniform(0, 1)
                 print(f"[Retrying in {sleep_time:.2f}s] Model busy or unavailable, attempt {attempt + 1}/{max_retries}")
@@ -177,20 +131,3 @@ def safe_generate_content(client, model, history, max_retries=5):
                 return None
     print(f"[WARNING] Failed after {max_retries} retries. Keeping previous concept list.")
     return None
-
-# "parts": [
-#             {
-#             "text": f"""Now you are assisting in the training of a multimodal intent recognition model. At this stage, you are provided with the discriminability scores \
-#             for each concpte, the current epoch's training loss, validation performance, and the historical context of past concept selections and their impacts. \
-#             Your task is to refine the current concept list based on the following information: \
-#             - Concepts with **lower D_score values** are more discriminative and should be prioritized. \
-#             - The goal is to optimize for a set of analytical concepts that are both **effective and generalizable** across multiple intent categories. \
-#             - Please avoid concepts that are redundant or simply duplicate intent label names. \
-#             Training status: \
-#             - Epoch: {epoch_num:.4f}  \
-#             - Training Loss: {loss:.4f} \ 
-#             - Validation Score: {eval_score:.4f} \
-#             Here are the current concepts and their corresponding discriminability scores (D_score): {concept_info} \
-#             Please return the updated concept list, and formatted as a comma-separated string. Do not include any explanation."""
-#             }
-#         ]

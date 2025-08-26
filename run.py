@@ -27,7 +27,7 @@ def parse_arguments():
     
     parser.add_argument("--model_path", default='models', type=str, help="The output directory where the model predictions and checkpoints will be written.")
     
-    parser.add_argument("--data_path", default='/home/sharing/disk1/disk1/wangyifan/data', type=str, help="The input data dir. Should contain text, video and audio data for the task.")
+    parser.add_argument("--data_path", default='/data', type=str, help="The input data dir. Should contain text, video and audio data for the task.")
 
     parser.add_argument('--dataset', type=str, default='MIntRec', help="The name of the used dataset.")  #
 
@@ -43,7 +43,7 @@ def parse_arguments():
 
     parser.add_argument("--text_backbone", type=str, default='bert-large-uncased', help="which backbone to use for the text modality.")  #
 
-    parser.add_argument("--bert_base_uncased_path", type=str, default="/home/sharing/disk1/wangyifan/models/bert-base-uncased", help="The name of the pre-trained BERT model to use.")  #
+    parser.add_argument("--bert_base_uncased_path", type=str, default="/models/bert-base-uncased", help="The name of the pre-trained BERT model to use.")  #
 
     parser.add_argument("--config_file_name", type=str, default='mag_bert_mintrec', help = "The name of the config file.")  # mag_bert_mintrec
 

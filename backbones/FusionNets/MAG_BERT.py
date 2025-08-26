@@ -33,6 +33,8 @@ class MAG(nn.Module):
 
         if self.args.need_aligned:
             text_embedding, acoustic, visual = self.alignNet(text_embedding, acoustic, visual)
+        # print(args.text_feat_dim)
+        # print(f"visual shape: {visual.shape}, acoustic shape: {acoustic.shape}, text_embedding shape: {text_embedding.shape}")
         
         weight_v = F.relu(self.W_hv(torch.cat((visual, text_embedding), dim=-1)))  # [16,30,1024]->[16,30,768]
         weight_a = F.relu(self.W_ha(torch.cat((acoustic, text_embedding), dim=-1)))  # [16,30,1536]->[16,30,768] two gating vectors
@@ -197,6 +199,32 @@ class MAG_BertModel(BertPreTrainedModel):
             token_type_ids=token_type_ids,
             inputs_embeds=inputs_embeds,
         )
+
+
+        def apply_sequence_mask(x, mask_ratio=0.1):
+            """
+            对输入张量 x 在 seq_len 维度上随机 mask 掉一定比例的 token（置为 0）。
+            x: Tensor of shape [batch_size, seq_len, dim]
+            """
+            batch_size, seq_len, _ = x.size()
+            # 创建 mask：True 表示保留，False 表示 mask 掉
+            keep_mask = torch.ones((batch_size, seq_len), dtype=torch.bool, device=x.device)
+            
+            # 每个样本随机 mask 掉 10% 的位置
+            num_mask = max(1, int(seq_len * mask_ratio))
+            for i in range(batch_size):
+                mask_indices = torch.randperm(seq_len)[:num_mask]
+                keep_mask[i, mask_indices] = False
+            
+            # 扩展维度并应用 mask
+            keep_mask = keep_mask.unsqueeze(-1).expand_as(x)  # [batch, seq_len, dim]
+            x_masked = x * keep_mask
+            return x_masked
+
+        # 对三个模态进行随机 mask
+        embedding_output = apply_sequence_mask(embedding_output, mask_ratio=0.05)
+        visual = apply_sequence_mask(visual, mask_ratio=0.1)
+        acoustic = apply_sequence_mask(acoustic, mask_ratio=0.1)
 
         # Early fusion with MAG
         fused_embedding = self.MAG(embedding_output, visual, acoustic)

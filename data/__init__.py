@@ -56,13 +56,4 @@ benchmarks = {
             'audio': 530,
         }
     },
-
-    'IEMOCAP-DA':{
-        'intent_labels':['a', 'ag', 'ans', 'ap', 'b', 'c', 'dag', 'g', 'o', 'oth', 'q', 's'],
-        'max_seq_lengths': {
-            'text': 44,
-            'video': 230,
-            'audio': 380
-        }
-    },
 }

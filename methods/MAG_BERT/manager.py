@@ -41,7 +41,7 @@ class MAG_BERT:
             {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
         ]
         
-        optimizer = AdamW(optimizer_grouped_parameters, lr = args.lr)
+        optimizer = AdamW(optimizer_grouped_parameters, lr = args.lr, correct_bias=False)
         num_train_examples = len(data.train_data_index)
         num_train_optimization_steps = int(num_train_examples / args.train_batch_size) * args.num_train_epochs
         num_warmup_steps= int(num_train_examples * args.num_train_epochs * args.warmup_proportion / args.train_batch_size)
